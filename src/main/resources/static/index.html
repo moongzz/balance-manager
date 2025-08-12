@@ -1,0 +1,955 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>계획 목록</title>
+    <style>
+        body {
+            font-family: "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
+            background-color: #f9f9f9;
+            margin: 40px;
+            color: #333;
+        }
+
+        h1 {
+            text-align: center;
+            color: #2c3e50;
+        }
+
+        .plans-table {
+            width: 100%;
+            max-width: 900px;
+            margin: 20px auto;
+            border-collapse: collapse;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            background-color: #fff;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        .plans-table th,
+        .plans-table td {
+            padding: 14px 18px;
+            border-bottom: 1px solid #ddd;
+            text-align: center;
+        }
+
+        .plans-table thead {
+            background-color: #3498db;
+            color: white;
+        }
+
+        .plans-table tbody tr:hover {
+            background-color: #f1f7fd;
+        }
+
+        .plans-table td:nth-child(2) {
+            color: #27ae60;
+            font-weight: bold;
+        }
+
+        .plans-table td:nth-child(4),
+        .plans-table td:nth-child(5) {
+            text-transform: capitalize;
+        }
+
+        #resultBox {
+            max-width: 400px;
+            margin: 20px auto 40px;
+            padding: 20px 30px;
+            background-color: #ffffff;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            font-size: 1.1rem;
+            color: #2c3e50;
+        }
+
+        #resultBox .field {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 0;
+            border-bottom: 1px solid #e1e8f0;
+        }
+
+        #resultBox .field:last-child {
+            border-bottom: none;
+        }
+
+        #resultBox .field span:first-child {
+            font-weight: 600;
+            color: #3498db;
+        }
+
+        #resultBox .field span:last-child {
+            font-weight: 700;
+            color: #27ae60;
+        }
+
+        form#planForm {
+            max-width: 400px;
+            margin: 20px auto 40px;
+            padding: 20px 25px;
+            background-color: #fff;
+            border-radius: 12px;
+            box-shadow: 0 3px 15px rgba(0,0,0,0.1);
+            font-family: "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
+            color: #2c3e50;
+        }
+
+        form#planForm label {
+            display: block;
+            margin-bottom: 15px;
+            font-weight: 600;
+        }
+
+        form#planForm input,
+        form#planForm select {
+            width: 100%;
+            padding: 8px 10px;
+            margin-top: 6px;
+            border: 1.8px solid #ddd;
+            border-radius: 6px;
+            font-size: 1rem;
+            transition: border-color 0.3s ease;
+        }
+
+        form#planForm input:focus,
+        form#planForm select:focus {
+            border-color: #3498db;
+            outline: none;
+        }
+
+        form#planForm button {
+            display: block;
+            width: 100%;
+            padding: 12px 0;
+            margin-top: 10px;
+            background-color: #3498db;
+            color: white;
+            font-weight: 700;
+            font-size: 1.1rem;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        form#planForm button:hover {
+            background-color: #2980b9;
+        }
+
+        #formMessage {
+            max-width: 400px;
+            margin: 0 auto;
+            text-align: center;
+            font-weight: 600;
+            font-size: 1.1rem;
+            padding: 10px 0;
+            border-radius: 8px;
+        }
+
+        #formMessage.success {
+            color: #27ae60;
+            background-color: #eafaf1;
+            border: 1px solid #27ae60;
+        }
+
+        #formMessage.error {
+            color: #e74c3c;
+            background-color: #fdecea;
+            border: 1px solid #e74c3c;
+        }
+
+
+
+
+        #modalOverlay {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+        #modalBox {
+            background: white;
+            padding: 25px 30px;
+            border-radius: 12px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.3);
+            max-width: 400px;
+            width: 100%;
+            position: relative;
+            font-family: "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
+            color: #2c3e50;
+        }
+        #closeModalBtn {
+            position: absolute;
+            top: 12px;
+            right: 15px;
+            background: none;
+            border: none;
+            font-size: 26px;
+            cursor: pointer;
+            color: #999;
+            transition: color 0.3s;
+        }
+        #closeModalBtn:hover {
+            color: #333;
+        }
+        #modalBox label {
+            display: block;
+            margin-bottom: 15px;
+            font-weight: 600;
+        }
+        #modalBox input,
+        #modalBox select {
+            width: 100%;
+            padding: 8px 10px;
+            margin-top: 6px;
+            border: 1.8px solid #ddd;
+            border-radius: 6px;
+            font-size: 1rem;
+            transition: border-color 0.3s ease;
+        }
+        #modalBox input:focus,
+        #modalBox select:focus {
+            border-color: #3498db;
+            outline: none;
+        }
+        #modalBox button[type="submit"] {
+            display: block;
+            width: 100%;
+            padding: 12px 0;
+            margin-top: 10px;
+            background-color: #3498db;
+            color: white;
+            font-weight: 700;
+            font-size: 1.1rem;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+        #modalBox button[type="submit"]:hover {
+            background-color: #2980b9;
+        }
+
+        #openModalBtn {
+            display: inline-block;
+            padding: 12px 24px;
+            background-color: #3498db;
+            color: white;
+            font-weight: 700;
+            font-size: 1.1rem;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background-color 0.3s ease, box-shadow 0.3s ease;
+            font-family: "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
+            box-shadow: 0 4px 10px rgba(52, 152, 219, 0.4);
+        }
+
+        #openModalBtn:hover {
+            background-color: #2980b9;
+            box-shadow: 0 6px 14px rgba(41, 128, 185, 0.6);
+        }
+
+        /* 한 행 전체 배경색, 약간 투명하게 */
+        .type-income-row {
+            background-color: rgba(39, 174, 96, 0.15); /* 연한 초록 */
+            color: #27ae60; /* 진한 초록 텍스트 */
+            font-weight: 600;
+        }
+
+        .type-expense-row {
+            background-color: rgba(231, 76, 60, 0.15); /* 연한 빨강 */
+            color: #e74c3c; /* 진한 빨강 텍스트 */
+            font-weight: 600;
+        }
+
+        .type-deleted-row {
+            background-color: rgba(128, 128, 128, 0.15); /* 연한 회색 */
+            color: #7f8c8d; /* 중간 회색 텍스트 */
+            font-style: italic;
+            font-weight: 600;
+        }
+
+        .plans-table tbody tr.type-deleted-row:hover {
+            background-color: rgba(128, 128, 128, 0.3);
+        }
+
+        /* 마우스 오버했을 때 살짝 진해지도록 */
+        .plans-table tbody tr.type-income-row:hover {
+            background-color: rgba(39, 174, 96, 0.3);
+        }
+
+        .plans-table tbody tr.type-expense-row:hover {
+            background-color: rgba(231, 76, 60, 0.3);
+        }
+
+        .edit-btn, .delete-btn {
+            margin: 0 5px;
+            padding: 5px 10px;
+            font-weight: 600;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .edit-btn {
+            background-color: #2980b9;
+            color: white;
+        }
+
+        .edit-btn:hover {
+            background-color: #1c5980;
+        }
+
+        .delete-btn {
+            background-color: #e74c3c;
+            color: white;
+        }
+
+        .delete-btn:hover {
+            background-color: #b63125;
+        }
+
+        .complete-btn {
+            background-color: #2ecc71; /* 연두 */
+            color: white;
+            margin: 0 5px;
+            padding: 5px 10px;
+            font-weight: 600;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        .complete-btn:hover {
+            background-color: #27ae60;
+        }
+
+        .cancel-btn {
+            background-color: #f39c12; /* 주황 */
+            color: white;
+            margin: 0 5px;
+            padding: 5px 10px;
+            font-weight: 600;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        .cancel-btn:hover {
+            background-color: #d68910;
+        }
+
+        .status-completed-row {
+            background-color: rgba(52, 152, 219, 0.15); /* 연한 파란색 */
+            color: #2980b9; /* 진한 파란 텍스트 */
+            font-weight: 600;
+        }
+
+        .plans-table tbody tr.status-completed-row:hover {
+            background-color: rgba(52, 152, 219, 0.3); /* 마우스 오버시 좀 더 진하게 */
+        }
+
+
+        .edit-btn:disabled,
+        .delete-btn:disabled,
+        .complete-btn:disabled,
+        .cancel-btn:disabled {
+            background-color: #bdc3c7; /* 회색 */
+            color: #7f8c8d; /* 연한 회색 글씨 */
+            cursor: not-allowed;
+            pointer-events: none; /* 클릭 불가 */
+            opacity: 0.6; /* 약간 투명하게 */
+            transition: none;
+        }
+
+
+        /* 필터/정렬 박스 컨테이너 */
+        .filter-container {
+            max-width: 900px;
+            margin: 0 auto 20px;
+            display: flex;
+            gap: 20px;
+            justify-content: flex-end;
+            align-items: center;
+            font-family: 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;
+            color: #2c3e50;
+            flex-wrap: wrap; /* 모바일에서 줄바꿈 */
+        }
+
+        /* 각 필터 라벨 */
+        .filter-container label {
+            display: flex;
+            flex-direction: column;
+            font-weight: 600;
+            font-size: 14px;
+            color: #34495e;
+            cursor: pointer;
+            min-width: 90px;
+        }
+
+        /* 셀렉트 박스 공통 스타일 */
+        .filter-container select {
+            margin-top: 6px;
+            padding: 6px 12px;
+            border: 1.5px solid #bdc3c7;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 500;
+            color: #34495e;
+            background-color: #fff;
+            transition: border-color 0.25s ease, box-shadow 0.25s ease;
+            cursor: pointer;
+            min-width: 130px;
+        }
+
+        /* 셀렉트 박스 포커스 시 */
+        .filter-container select:focus {
+            outline: none;
+            border-color: #2980b9;
+            box-shadow: 0 0 8px rgba(41, 128, 185, 0.4);
+        }
+
+        /* 셀렉트 박스 마우스 오버 시 */
+        .filter-container select:hover {
+            border-color: #3498db;
+        }
+
+        /* 반응형: 화면이 좁으면 세로 정렬 */
+        @media (max-width: 480px) {
+            .filter-container {
+                justify-content: center;
+                gap: 15px;
+            }
+
+            .filter-container label {
+                min-width: 120px;
+                font-size: 13px;
+            }
+
+            .filter-container select {
+                min-width: 100%;
+            }
+        }
+
+        .filter-group {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-weight: 600;
+            font-size: 14px;
+            color: #34495e;
+        }
+
+        .filter-group span {
+            margin-right: 8px;
+            user-select: none;
+        }
+
+        .filter-group label {
+            font-weight: 500;
+            cursor: pointer;
+            user-select: none;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .filter-group input[type="checkbox"] {
+            width: 16px;
+            height: 16px;
+            cursor: pointer;
+        }
+
+
+    </style>
+</head>
+<body>
+<h1>계획 목록</h1>
+<div id="resultBox" style="display: none;">
+    <div class="field"><span>금액:</span> <span id="amount"></span></div>
+    <div class="field"><span>업데이트 날짜:</span> <span id="updatedAt"></span></div>
+</div>
+<div class="filter-container">
+    <div class="filter-group">
+        <span>상태:</span>
+        <label><input type="checkbox" name="filterStatus" value="PENDING" checked> 활성</label>
+        <label><input type="checkbox" name="filterStatus" value="COMPLETED" checked> 완료</label>
+        <label><input type="checkbox" name="filterStatus" value="CANCELED" checked> 취소</label>
+        <label><input type="checkbox" name="filterStatus" value="DELETED" checked> 삭제</label>
+    </div>
+
+    <label>
+        유형:
+        <select id="filterType">
+            <option value="ALL">전체</option>
+            <option value="INCOME">수입</option>
+            <option value="EXPENSE">지출</option>
+        </select>
+    </label>
+
+    <label>
+        정렬:
+        <select id="sortBy">
+            <option value="dateDesc">날짜 내림차순</option>
+            <option value="dateAsc">날짜 오름차순</option>
+            <option value="priceDesc">금액 내림차순</option>
+            <option value="priceAsc">금액 오름차순</option>
+        </select>
+    </label>
+</div>
+
+
+<table class="plans-table">
+    <thead>
+    <tr>
+        <th>내용</th>
+        <th>금액</th>
+        <th>날짜</th>
+        <th>상태</th>
+        <th>유형</th>
+        <th>액션</th>
+    </tr>
+    </thead>
+    <tbody id="plansTableBody">
+    <!-- 데이터 삽입 -->
+    </tbody>
+</table>
+
+<button id="openModalBtn">새 계획 등록하기</button>
+
+<!-- 모달 배경 -->
+<div id="modalOverlay" style="display:none;">
+    <!-- 모달 박스 -->
+    <div id="modalBox">
+        <button id="closeModalBtn" aria-label="닫기">&times;</button>
+        <h2>새 계획 등록</h2>
+        <form id="planForm">
+            <label>
+                내용:
+                <input type="text" name="details" required />
+            </label>
+            <br/><br/>
+            <label>
+                금액:
+                <input type="number" name="price" required />
+            </label>
+            <br/><br/>
+            <label>
+                날짜:
+                <input type="datetime-local" name="date" required />
+            </label>
+            <br/><br/>
+            <label>
+                유형:
+                <select name="type" required>
+                    <option value="INCOME">수입</option>
+                    <option value="EXPENSE">지출</option>
+                </select>
+            </label>
+            <br/><br/>
+            <button type="submit">등록하기</button>
+        </form>
+    </div>
+</div>
+
+<div id="formMessage" style="margin-top:10px;"></div>
+
+<script>
+    // 페이지 로드 시 자동으로 ID=1 요청
+    window.addEventListener('DOMContentLoaded', () => {
+        fetch('/balances/1')
+            .then(res => {
+                if (!res.ok) throw new Error("데이터를 불러올 수 없습니다.");
+                return res.json();
+            })
+            .then(data => {
+                const balance = data.balance;
+
+                document.getElementById('amount').innerText = balance.balanceAmount.toLocaleString() + '원';
+                document.getElementById('updatedAt').innerText = new Date(balance.updatedAt).toLocaleString();
+                document.getElementById('resultBox').style.display = 'block';
+            })
+            .catch(err => {
+                alert("잔액 정보를 불러올 수 없습니다: " + err.message);
+            });
+    });
+</script>
+<script>
+    // 잔액 정보 가져오기 (기존 코드)
+    window.addEventListener('DOMContentLoaded', () => {
+        fetch('/balances/1')
+            .then(res => {
+                if (!res.ok) throw new Error("데이터를 불러올 수 없습니다.");
+                return res.json();
+            })
+            .then(data => {
+                const balance = data.balance;
+                document.getElementById('amount').innerText = balance.balanceAmount.toLocaleString() + '원';
+                document.getElementById('updatedAt').innerText = new Date(balance.updatedAt).toLocaleString();
+                document.getElementById('resultBox').style.display = 'block';
+            })
+            .catch(err => {
+                alert("잔액 정보를 불러올 수 없습니다: " + err.message);
+            });
+    });
+
+    // 전역 plans 배열 선언
+    let plans = [];
+    let editingPlanId = null;
+
+    // fetch 후 plans 저장 및 렌더링 시작
+    fetch('/plans')
+        .then(res => res.json())
+        .then(data => {
+            plans = data.planPage.content;
+            filterAndSortPlans(); // 최초 렌더링
+        })
+        .catch(err => {
+            console.error("데이터 로드 실패:", err);
+        });
+
+    // plans 배열을 받아서 테이블 렌더링
+    function renderPlans(plansToRender) {
+        const tableBody = document.getElementById('plansTableBody');
+        tableBody.innerHTML = ''; // 초기화
+
+        if (plansToRender.length === 0) {
+            const emptyRow = document.createElement('tr');
+            const emptyCell = document.createElement('td');
+            emptyCell.colSpan = 6; // 테이블 컬럼수에 맞게 조절
+            emptyCell.innerText = '표시할 계획이 없습니다.';
+            emptyRow.appendChild(emptyCell);
+            tableBody.appendChild(emptyRow);
+            return;
+        }
+
+        plansToRender.forEach(plan => {
+            const row = document.createElement('tr');
+
+            const detailsCell = document.createElement('td');
+            detailsCell.innerText = plan.details;
+
+            const priceCell = document.createElement('td');
+            priceCell.innerText = plan.price.toLocaleString();
+
+            const dateCell = document.createElement('td');
+            dateCell.innerText = new Date(plan.date).toLocaleDateString();
+
+            const statusCell = document.createElement('td');
+            statusCell.innerText = plan.status;
+
+            const typeCell = document.createElement('td');
+            typeCell.innerText = plan.type;
+
+            const actionCell = document.createElement('td');
+
+            // 버튼 생성 및 이벤트 연결
+            const editBtn = document.createElement('button');
+            editBtn.innerText = '수정';
+            editBtn.classList.add('edit-btn');
+            editBtn.addEventListener('click', () => openEditModal(plan));
+
+            const deleteBtn = document.createElement('button');
+            deleteBtn.innerText = '삭제';
+            deleteBtn.classList.add('delete-btn');
+            deleteBtn.addEventListener('click', () => {
+                if (confirm('정말 삭제하시겠습니까?')) {
+                    deletePlan(plan.id);
+                }
+            });
+
+            const completeBtn = document.createElement('button');
+            completeBtn.innerText = '완료';
+            completeBtn.classList.add('complete-btn');
+            completeBtn.addEventListener('click', () => {
+                if (confirm('이 계획을 완료 처리하시겠습니까?')) {
+                    updateStatus(plan.id, 'completed');
+                }
+            });
+
+            const cancelBtn = document.createElement('button');
+            cancelBtn.innerText = '취소';
+            cancelBtn.classList.add('cancel-btn');
+            cancelBtn.addEventListener('click', () => {
+                if (confirm('이 계획을 취소 처리하시겠습니까?')) {
+                    updateStatus(plan.id, 'canceled');
+                }
+            });
+
+            if (plan.status === 'DELETED') {
+                editBtn.disabled = true;
+                deleteBtn.disabled = true;
+                completeBtn.disabled = true;
+                cancelBtn.disabled = true;
+            } else if (plan.status === 'COMPLETED') {
+                editBtn.disabled = true;
+                deleteBtn.disabled = true;
+                completeBtn.disabled = true;
+            }
+
+            actionCell.appendChild(editBtn);
+            actionCell.appendChild(deleteBtn);
+            actionCell.appendChild(completeBtn);
+            actionCell.appendChild(cancelBtn);
+
+            if (plan.type === 'INCOME') {
+                row.classList.add('type-income-row');
+            } else if (plan.type === 'EXPENSE') {
+                row.classList.add('type-expense-row');
+            }
+
+            if (plan.status === 'DELETED') {
+                row.classList.add('type-deleted-row');
+            } else if (plan.status === 'COMPLETED') {
+                row.classList.add('status-completed-row');
+            }
+
+            row.appendChild(detailsCell);
+            row.appendChild(priceCell);
+            row.appendChild(dateCell);
+            row.appendChild(statusCell);
+            row.appendChild(typeCell);
+            row.appendChild(actionCell);
+
+            tableBody.appendChild(row);
+        });
+    }
+
+    // 필터링 및 정렬 조건 읽고 plans 필터, 정렬 후 렌더링
+    function filterAndSortPlans() {
+        // 상태 필터를 체크박스 배열로 받기
+        const selectedStatuses = Array.from(document.querySelectorAll('input[name="filterStatus"]:checked')).map(cb => cb.value);
+        const filterType = document.getElementById('filterType').value;
+        const sortBy = document.getElementById('sortBy').value;
+
+        let filtered = plans;
+
+        if (selectedStatuses.length > 0 && !selectedStatuses.includes('ALL')) {
+            filtered = filtered.filter(plan => selectedStatuses.includes(plan.status));
+        }
+
+        if (filterType !== 'ALL') {
+            filtered = filtered.filter(plan => plan.type === filterType);
+        }
+
+        filtered.sort((a, b) => {
+            switch (sortBy) {
+                case 'dateAsc':
+                    return new Date(a.date) - new Date(b.date);
+                case 'dateDesc':
+                    return new Date(b.date) - new Date(a.date);
+                case 'priceAsc':
+                    return a.price - b.price;
+                case 'priceDesc':
+                    return b.price - a.price;
+                default:
+                    return 0;
+            }
+        });
+
+        renderPlans(filtered);
+    }
+
+    // 체크박스 변경 이벤트 연결
+    document.querySelectorAll('input[name="filterStatus"]').forEach(cb => {
+        cb.addEventListener('change', filterAndSortPlans);
+    });
+    // 필터/정렬 select에 이벤트 연결
+    document.getElementById('filterType').addEventListener('change', filterAndSortPlans);
+    document.getElementById('sortBy').addEventListener('change', filterAndSortPlans);
+
+    // 모달 열기/닫기 기존 코드
+    const openBtn = document.getElementById('openModalBtn');
+    const closeBtn = document.getElementById('closeModalBtn');
+    const modal = document.getElementById('modalOverlay');
+
+    openBtn.addEventListener('click', () => {
+        editingPlanId = null;  // 신규 등록 모드로 초기화
+        modal.style.display = 'flex';
+
+        // 폼 초기화
+        const form = document.getElementById('planForm');
+        form.reset();
+        document.getElementById('formMessage').innerText = '';
+    });
+
+
+    closeBtn.addEventListener('click', () => {
+        modal.style.display = 'none';
+    });
+
+    modal.addEventListener('click', (e) => {
+        if (e.target === modal) {
+            modal.style.display = 'none';
+        }
+    });
+
+    // 새 계획 등록 핸들러 (기존 코드)
+    document.getElementById('planForm').addEventListener('submit', function (event) {
+        event.preventDefault();
+
+        if (editingPlanId) {
+            // 수정 모드이면 update 호출
+            updatePlan(editingPlanId);
+        } else {
+            // 아니면 신규 등록
+            createPlan();
+        }
+    });
+
+    function createPlan() {
+        const form = document.getElementById('planForm');
+        const details = form.details.value.trim();
+        const price = parseInt(form.price.value, 10);
+        const date = form.date.value;
+        const type = form.type.value;
+
+        if (!details || isNaN(price) || !date || !type) {
+            alert("모든 필드를 올바르게 입력해주세요.");
+            return;
+        }
+
+        const isoDate = new Date(date).toISOString();
+
+        const body = {
+            plan: {
+                details: details,
+                price: price,
+                date: isoDate,
+                type: type
+            }
+        };
+
+        fetch('/plans', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(body)
+        })
+        .then(response => {
+            if (!response.ok) throw new Error("서버 에러 발생");
+            return response.text();
+        })
+        .then(() => {
+            document.getElementById('formMessage').innerText = "계획이 성공적으로 등록되었습니다.";
+            form.reset();
+            modal.style.display = 'none';
+            // 새 계획 추가 후 목록 다시 불러오기
+            return fetch('/plans').then(res => res.json());
+        })
+        .then(data => {
+            plans = data.planPage.content;
+            filterAndSortPlans();
+            editingPlanId = null;  // 등록 후 수정모드 해제
+        })
+        .catch(error => {
+            document.getElementById('formMessage').innerText = "등록 실패: " + error.message;
+        });
+    }
+
+    function updatePlan(id) {
+        const form = document.getElementById('planForm');
+        const details = form.details.value.trim();
+        const price = parseInt(form.price.value, 10);
+        const date = form.date.value;
+        const type = form.type.value;
+
+        if (!details || isNaN(price) || !date || !type) {
+            alert("모든 필드를 올바르게 입력해주세요.");
+            return;
+        }
+
+        const isoDate = new Date(date).toISOString();
+
+        fetch(`/plans/${id}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                plan: {
+                    details: details,
+                    price: price,
+                    date: isoDate,
+                    type: type
+                }
+            })
+        })
+        .then(res => {
+            if (!res.ok) throw new Error('수정 실패');
+            alert('수정되었습니다.');
+            modal.style.display = 'none';
+            // 수정 후 plans 다시 불러오기
+            return fetch('/plans').then(res => res.json());
+        })
+        .then(data => {
+            plans = data.planPage.content;
+            filterAndSortPlans();
+            editingPlanId = null;  // 수정 완료 후 수정모드 해제
+        })
+        .catch(err => {
+            alert('수정 중 오류 발생: ' + err.message);
+        });
+    }
+
+
+    // 삭제 함수
+    function deletePlan(id) {
+        fetch(`/plans/${id}`, {
+            method: 'DELETE'
+        })
+            .then(res => {
+                if (!res.ok) throw new Error('삭제 실패');
+                alert('삭제되었습니다.');
+                // 삭제 후 plans 다시 불러오기
+                return fetch('/plans').then(res => res.json());
+            })
+            .then(data => {
+                plans = data.planPage.content;
+                filterAndSortPlans();
+            })
+            .catch(err => {
+                alert('삭제 중 오류 발생: ' + err.message);
+            });
+    }
+
+    function openEditModal(plan) {
+        editingPlanId = plan.id;  // 수정 중인 계획 id 설정
+
+        modal.style.display = 'flex';
+
+        const form = document.getElementById('planForm');
+        form.details.value = plan.details;
+        form.price.value = plan.price;
+        form.date.value = plan.date.slice(0, 16); // datetime-local 포맷에 맞게 잘라서 넣기
+        form.type.value = plan.type;
+
+        document.getElementById('formMessage').innerText = '';
+    }
+
+
+    // 상태 업데이트 (완료, 취소)
+    function updateStatus(id, action) {
+        fetch(`/plans/${id}/${action}`, {
+            method: 'PATCH'
+        })
+            .then(res => {
+                if (!res.ok) throw new Error('상태 변경 실패');
+                alert(`계획이 ${action === 'completed' ? '완료' : '취소'} 처리되었습니다.`);
+                return fetch('/plans').then(res => res.json());
+            })
+            .then(data => {
+                plans = data.planPage.content;
+                filterAndSortPlans();
+            })
+            .catch(err => {
+                alert(`상태 변경 중 오류 발생: ${err.message}`);
+            });
+    }
+</script>
+</body>
+</html>
